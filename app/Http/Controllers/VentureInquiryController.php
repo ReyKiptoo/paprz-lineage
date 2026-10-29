@@ -40,6 +40,8 @@ class VentureInquiryController extends Controller
             'prompt' => 'required|string|max:1000',
             'priors' => 'nullable|array',
             'parent_id' => 'nullable|string|max:100',
+            'branch_type' => 'nullable|string|max:50',
+            'connection_reason' => 'nullable|string|max:255',
         ]);
 
         $userApiKey = $request->header('X-Gemini-Key') ?: $request->input('api_key');
@@ -48,12 +50,54 @@ class VentureInquiryController extends Controller
             prompt: $validated['prompt'],
             priors: $validated['priors'] ?? [],
             parentBlockId: $validated['parent_id'] ?? null,
-            userApiKey: $userApiKey
+            userApiKey: $userApiKey,
+            branchType: $validated['branch_type'] ?? null,
+            connectionReason: $validated['connection_reason'] ?? null
         );
 
         return response()->json([
             'status' => 'success',
             'block' => $block,
+        ]);
+    }
+
+    /**
+     * Consolidate a cluster of proven blocks into one overarching Macro Truth.
+     */
+    public function synthesizeMacro(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'blocks' => 'required|array|min:2',
+        ]);
+
+        $userApiKey = $request->header('X-Gemini-Key') ?: $request->input('api_key');
+
+        $macro = $this->geminiService->synthesizeMacroCluster(
+            blocks: $validated['blocks'],
+            userApiKey: $userApiKey
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'macro' => $macro,
+        ]);
+    }
+
+    /**
+     * Permanently save the verified lineage tree to server storage (paprz_foundations.json).
+     */
+    public function saveBedrock(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'blocks' => 'required|array|min:1',
+        ]);
+
+        $path = database_path('data/paprz_foundations.json');
+        file_put_contents($path, json_encode($validated['blocks'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lineage tree saved permanently to bedrock foundations.',
         ]);
     }
 

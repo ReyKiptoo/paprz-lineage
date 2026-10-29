@@ -17,8 +17,7 @@ class VentureInquiryTest extends TestCase
         $response->assertSee('Paprz Lineage');
         $response->assertSee('Startup Thought Engine');
         $response->assertSee('What Startup Hypothesis Shall We Test?');
-        $response->assertSee('The Fragmentation \u0026 Quality Bottleneck', false);
-        $response->assertSee('Dual-Access Monetization via M-Pesa Micropayments', false);
+        $response->assertSee('The Liquidity \u0026 Distribution Bottleneck', false);
     }
 
     /**

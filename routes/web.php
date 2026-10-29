@@ -7,3 +7,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [VentureInquiryController::class, 'index'])->name('inquiry.index');
 Route::post('/api/inquiry/forge', [VentureInquiryController::class, 'forge'])->name('inquiry.forge');
 Route::post('/api/inquiry/challenge', [VentureInquiryController::class, 'challenge'])->name('inquiry.challenge');
+Route::post('/api/inquiry/synthesize-macro', [VentureInquiryController::class, 'synthesizeMacro'])->name('inquiry.macro');
+Route::post('/api/inquiry/save-bedrock', [VentureInquiryController::class, 'saveBedrock'])->name('inquiry.save-bedrock');

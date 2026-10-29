@@ -20,7 +20,14 @@ class VentureGeminiService
     /**
      * Forge a Startup / Venture Inquiry Building Block from a hypothesis and prior facts.
      */
-    public function forgeInquiry(string $prompt, array $priors = [], ?string $parentBlockId = null, ?string $userApiKey = null): array
+    public function forgeInquiry(
+        string $prompt,
+        array $priors = [],
+        ?string $parentBlockId = null,
+        ?string $userApiKey = null,
+        ?string $branchType = null,
+        ?string $connectionReason = null
+    ): array
     {
         $apiKey = $userApiKey ?: $this->defaultApiKey;
 
@@ -30,6 +37,8 @@ class VentureGeminiService
                 if ($block) {
                     $block['id'] = 'blk_v_' . Str::random(10);
                     $block['parent_id'] = $parentBlockId;
+                    $block['branch_type'] = $branchType;
+                    $block['connection_reason'] = $connectionReason;
                     $block['created_at'] = now()->toIso8601String();
                     $block['status'] = 'draft';
                     $block['sealed'] = false;
@@ -44,8 +53,36 @@ class VentureGeminiService
         }
 
         $block = $this->heuristicFallback($prompt, $priors, $parentBlockId);
+        $block['branch_type'] = $branchType;
+        $block['connection_reason'] = $connectionReason;
         $block['source'] = $apiKey ? 'heuristic_fallback' : 'heuristic';
         return $block;
+    }
+
+    /**
+     * Synthesize multiple connected proven blocks into one overarching Macro Truth.
+     */
+    public function synthesizeMacroCluster(array $blocks, ?string $userApiKey = null): array
+    {
+        $apiKey = $userApiKey ?: $this->defaultApiKey;
+
+        $blockSummaries = array_map(function ($b) {
+            return "- [{$b['title']}]: Hypothesis: {$b['hypothesis']} | Deduced Principle: {$b['results']['lesson']}";
+        }, $blocks);
+
+        $prompt = "We have proven the following cluster of connected venture hypotheses:\n"
+            . implode("\n", $blockSummaries) . "\n\n"
+            . "Synthesize these into a single unified 'Macro Truth Milestone' representing the overarching business or technical law that has now been answered beyond doubt.";
+
+        $macro = $this->forgeInquiry($prompt, [], null, $apiKey, 'macro', 'Consolidation of proven cluster');
+        $macro['title'] = 'Macro Truth: ' . Str::headline(Str::limit($macro['title'], 32, ''));
+        $macro['category'] = 'Master Truth Milestone';
+        $macro['sealed'] = true;
+        $macro['status'] = 'sealed';
+        $macro['is_macro'] = true;
+        $macro['consolidated_block_ids'] = array_column($blocks, 'id');
+
+        return $macro;
     }
 
     /**
