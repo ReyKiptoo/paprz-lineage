@@ -25,8 +25,12 @@ export function ventureCanvasApp(initialBlocks = []) {
         // Gemini API Configuration
         apiKey: localStorage.getItem('paprz_gemini_api_key') || '',
         showKeyModal: false,
-        tempApiKey: '',
+        tempApiKey: localStorage.getItem('paprz_gemini_api_key') || '',
         keyNotice: '',
+        apiStatus: 'untested', // 'untested' | 'testing' | 'connected' | 'error'
+        apiStatusMessage: '',
+        isTestingKey: false,
+        testResult: null,
 
         // Challenge Modal
         showChallengeModal: false,
@@ -94,6 +98,13 @@ export function ventureCanvasApp(initialBlocks = []) {
                     this.selectedBlockId = this.blocks[0].id;
                 }
             });
+
+            // Automatically verify Gemini connection status on boot
+            if (this.apiKey) {
+                this.testApiKey(this.apiKey, false);
+            } else {
+                this.testApiKey(null, false);
+            }
         },
 
         // Dialogue actions
@@ -140,14 +151,30 @@ export function ventureCanvasApp(initialBlocks = []) {
                     this.dialogueMessages.push({
                         role: 'model',
                         content: data.reply,
-                        proposed_block: data.proposed_block || null
+                        proposed_block: data.proposed_block || null,
+                        is_error: false,
+                        is_live_gemini: !!data.is_live_gemini,
+                        model: data.model || null
                     });
+                    if (data.is_live_gemini) {
+                        this.apiStatus = 'connected';
+                    }
+                } else {
+                    this.dialogueMessages.push({
+                        role: 'model',
+                        content: data.reply || 'Gemini API call failed.',
+                        is_error: true,
+                        proposed_block: null
+                    });
+                    this.apiStatus = 'error';
+                    this.apiStatusMessage = data.reply;
                 }
             } catch (err) {
                 console.error('Dialogue error:', err);
                 this.dialogueMessages.push({
                     role: 'model',
                     content: 'Error during dialogue: ' + err.message,
+                    is_error: true,
                     proposed_block: null
                 });
             } finally {
@@ -209,32 +236,79 @@ export function ventureCanvasApp(initialBlocks = []) {
             this.isInspectorOpen = false;
         },
 
-        // API Key Management
-        saveApiKey() {
+        // API Key Management & Live Verification
+        async testApiKey(targetKey = null, notify = true) {
+            const keyToTest = targetKey !== null ? targetKey : this.tempApiKey.trim();
+            this.isTestingKey = true;
+            this.testResult = null;
+
+            try {
+                const response = await fetch('/api/inquiry/test-connection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        api_key: keyToTest
+                    })
+                });
+
+                const data = await response.json();
+                this.testResult = data;
+
+                if (data.status === 'success') {
+                    this.apiStatus = 'connected';
+                    this.apiStatusMessage = data.message;
+                    if (notify) this.showToast('Verified with Google Gemini (' + (data.model || 'live') + ')');
+                } else {
+                    this.apiStatus = 'error';
+                    this.apiStatusMessage = data.message;
+                }
+            } catch (err) {
+                this.testResult = {
+                    status: 'error',
+                    code: 500,
+                    message: 'Network request error: ' + err.message
+                };
+                this.apiStatus = 'error';
+                this.apiStatusMessage = err.message;
+            } finally {
+                this.isTestingKey = false;
+            }
+        },
+
+        async saveApiKey() {
             const cleanKey = this.tempApiKey.trim();
             this.apiKey = cleanKey;
             if (cleanKey) {
                 localStorage.setItem('paprz_gemini_api_key', cleanKey);
-                this.keyNotice = 'API key saved.';
+                await this.testApiKey(cleanKey, true);
             } else {
                 localStorage.removeItem('paprz_gemini_api_key');
-                this.keyNotice = 'API key removed. Running in offline mode.';
+                this.apiStatus = 'untested';
+                this.apiStatusMessage = '';
+                this.testResult = null;
+                this.keyNotice = 'API key removed. Running in offline simulation mode.';
             }
-            setTimeout(() => {
-                this.showKeyModal = false;
-                this.keyNotice = '';
-            }, 1000);
+
+            if (this.apiStatus === 'connected') {
+                setTimeout(() => {
+                    this.showKeyModal = false;
+                    this.keyNotice = '';
+                }, 1000);
+            }
         },
 
         clearApiKey() {
             this.apiKey = '';
             this.tempApiKey = '';
             localStorage.removeItem('paprz_gemini_api_key');
-            this.keyNotice = 'API key removed.';
-            setTimeout(() => {
-                this.showKeyModal = false;
-                this.keyNotice = '';
-            }, 1000);
+            this.apiStatus = 'untested';
+            this.apiStatusMessage = '';
+            this.testResult = null;
+            this.keyNotice = 'API key removed. Running in offline simulation mode.';
         },
 
         // Quick starter prompts

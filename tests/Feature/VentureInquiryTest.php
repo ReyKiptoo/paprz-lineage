@@ -123,4 +123,41 @@ class VentureInquiryTest extends TestCase
             file_put_contents($path, $original);
         }
     }
+
+    /**
+     * Test offline dialogue responds honestly when asked if it is Gemini.
+     */
+    public function test_dialogue_offline_mode_clarifies_status(): void
+    {
+        config(['services.gemini.key' => null]);
+
+        $response = $this->postJson('/api/inquiry/dialogue', [
+            'messages' => [
+                ['role' => 'user', 'content' => 'am I talking to gemini?']
+            ],
+            'canvas_blocks' => [],
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'success',
+        ]);
+        $this->assertStringContainsString('Offline Simulation Mode', $response->json('reply'));
+    }
+
+    /**
+     * Test test-connection endpoint returns 401 when no key provided.
+     */
+    public function test_test_connection_without_key_returns_error(): void
+    {
+        $response = $this->postJson('/api/inquiry/test-connection', [
+            'api_key' => '',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'error',
+            'code' => 401,
+        ]);
+    }
 }

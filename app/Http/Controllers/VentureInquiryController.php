@@ -37,8 +37,8 @@ class VentureInquiryController extends Controller
     public function dialogue(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'messages' => 'required|array',
-            'canvas_blocks' => 'required|array',
+            'messages' => 'required|array|min:1',
+            'canvas_blocks' => 'present|array',
         ]);
 
         $userApiKey = $request->header('X-Gemini-Key') ?: $request->input('api_key');
@@ -50,10 +50,26 @@ class VentureInquiryController extends Controller
         );
 
         return response()->json([
-            'status' => 'success',
+            'status' => isset($result['error']) && $result['error'] ? 'error' : 'success',
             'reply' => $result['reply'] ?? '',
             'proposed_block' => $result['proposed_block'] ?? null,
+            'is_error' => $result['error'] ?? false,
+            'is_live_gemini' => $result['is_live_gemini'] ?? false,
+            'model' => $result['model'] ?? null,
         ]);
+    }
+
+    /**
+     * Test and verify connection to Google Gemini API.
+     */
+    public function testConnection(Request $request): JsonResponse
+    {
+        $hasParam = $request->exists('api_key');
+        $userApiKey = $request->header('X-Gemini-Key') ?: ($hasParam ? (string) $request->input('api_key', '') : null);
+
+        $result = $this->geminiService->testConnection($userApiKey);
+
+        return response()->json($result);
     }
 
     /**

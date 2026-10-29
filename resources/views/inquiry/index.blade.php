@@ -84,11 +84,16 @@
                     <!-- Gemini API Status Button -->
                     <button @click="showKeyModal = true"
                             type="button"
-                            class="btn-secondary !h-8 !px-2.5 !text-xs"
-                            :title="apiKey ? 'Gemini API active' : 'Configure Gemini API key'">
+                            class="btn-secondary !h-8 !px-2.5 !text-xs flex items-center gap-1.5"
+                            :title="apiStatusMessage || 'Configure Gemini API key'">
                         <span class="w-1.5 h-1.5 rounded-full" 
-                              :class="apiKey ? 'bg-[var(--success-text)]' : 'bg-[var(--warning-text)]'"></span>
-                        <span x-text="apiKey ? 'Gemini active' : 'Connect Gemini'"></span>
+                              :class="{
+                                  'bg-[var(--success-text)]': apiStatus === 'connected',
+                                  'bg-[var(--error-text)] animate-pulse': apiStatus === 'error',
+                                  'bg-[var(--warning-text)]': apiStatus === 'untested',
+                                  'bg-[var(--accent)] animate-ping': apiStatus === 'testing'
+                              }"></span>
+                        <span x-text="apiStatus === 'connected' ? 'Gemini live' : (apiStatus === 'error' ? 'Gemini error' : (apiStatus === 'testing' ? 'Testing...' : 'Connect Gemini'))"></span>
                     </button>
 
                     <!-- Theme Toggle -->
@@ -681,14 +686,42 @@
                 </a>
             </div>
 
-            <div class="mb-5">
-                <label class="block text-xs text-[var(--text-muted)] mb-1.5">API key</label>
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs text-[var(--text-muted)]">API key</label>
+                    <button @click="testApiKey(tempApiKey, false)"
+                            :disabled="!tempApiKey.trim() || isTestingKey"
+                            type="button"
+                            class="text-xs text-[var(--accent)] hover:underline flex items-center gap-1">
+                        <span x-show="isTestingKey" class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-ping"></span>
+                        <span x-text="isTestingKey ? 'Testing with Google...' : 'Test connection'"></span>
+                    </button>
+                </div>
                 <input type="password" 
                        x-model="tempApiKey"
                        placeholder="AIzaSy..."
                        class="w-full px-3.5 py-2 rounded-[var(--radius-md)] bg-[var(--bg-raised)] border border-[var(--border-strong)] text-[var(--text)] placeholder-[var(--text-faint)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] text-xs font-mono"
                        style="outline: none !important;" />
             </div>
+
+            <!-- Test Connection Result Banner -->
+            <template x-if="testResult">
+                <div class="mb-4 p-3 rounded-[var(--radius-md)] text-xs border"
+                     :class="testResult.status === 'success' ? 'bg-[var(--success-bg)] text-[var(--success-text)] border-[var(--success-border)]' : 'bg-[var(--error-bg)] text-[var(--error-text)] border-[var(--error-border)]'">
+                    <div class="flex items-start gap-2">
+                        <span class="font-bold text-sm" x-text="testResult.status === 'success' ? '✓' : '⚠️'"></span>
+                        <div class="flex-1 space-y-1">
+                            <div class="font-medium" x-text="testResult.status === 'success' ? 'Connection Verified' : 'Google API Rejection (HTTP ' + (testResult.code || 'Error') + ')'"></div>
+                            <p class="font-mono text-[11px] leading-relaxed break-words" x-text="testResult.message"></p>
+                            <template x-if="testResult.code === 402">
+                                <div class="pt-1.5 mt-1 border-t border-[var(--error-border)]/50">
+                                    <a href="https://ai.studio/projects" target="_blank" rel="noopener" class="underline font-sans text-xs font-medium">Manage project billing on Google AI Studio →</a>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
 
             <div x-show="keyNotice" class="mb-4 text-xs text-[var(--success-text)]" x-text="keyNotice"></div>
 
@@ -703,12 +736,13 @@
                     <button @click="showKeyModal = false" 
                             type="button" 
                             class="btn-secondary !h-8 !px-3 !text-xs">
-                        Cancel
+                        Close
                     </button>
                     <button @click="saveApiKey()" 
+                            :disabled="isTestingKey"
                             type="button" 
                             class="btn-primary !h-8 !px-3 !text-xs">
-                        Save key
+                        <span x-text="isTestingKey ? 'Verifying...' : 'Save & verify key'"></span>
                     </button>
                 </div>
             </div>
@@ -796,10 +830,23 @@
             <div class="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between gap-3 bg-[var(--bg-sunken)]">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>
+                        <span class="w-2 h-2 rounded-full"
+                              :class="{
+                                  'bg-[var(--success-text)]': apiStatus === 'connected',
+                                  'bg-[var(--error-text)] animate-pulse': apiStatus === 'error',
+                                  'bg-[var(--warning-text)]': apiStatus === 'untested' || apiStatus === 'testing'
+                              }"></span>
                         <h3 class="font-serif text-lg font-normal text-[var(--text)]">Founder Interrogation Co-Pilot</h3>
                     </div>
-                    <p class="text-xs text-[var(--text-muted)] font-mono" x-text="'Context: ' + totalCount + ' blocks injected'"></p>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-xs text-[var(--text-muted)] font-mono" x-text="'Context: ' + totalCount + ' blocks injected'"></span>
+                        <span class="text-[var(--text-faint)]">·</span>
+                        <button @click="showKeyModal = true" 
+                                type="button" 
+                                class="text-[11px] font-mono hover:underline"
+                                :class="apiStatus === 'connected' ? 'text-[var(--success-text)]' : (apiStatus === 'error' ? 'text-[var(--error-text)] font-semibold' : 'text-[var(--warning-text)]')"
+                                x-text="apiStatus === 'connected' ? '● Live Gemini (3.8-flash)' : (apiStatus === 'error' ? '● Gemini Error (Fix key)' : '● Offline Simulator')"></button>
+                    </div>
                 </div>
                 <button @click="closeDialogue()" class="btn-ghost !h-7 !px-2 text-xs">✕</button>
             </div>
@@ -809,9 +856,14 @@
                 <template x-for="(msg, mIndex) in dialogueMessages" :key="mIndex">
                     <div class="space-y-2">
                         <!-- Message Bubble -->
-                        <div :class="msg.role === 'user' ? 'ml-8 bg-[var(--bg-sunken)] p-3.5 rounded-[var(--radius-md)] text-xs sm:text-sm text-[var(--text)]' : 'mr-4 bg-[var(--bg-raised)] border border-[var(--border)] p-4 rounded-[var(--radius-md)] text-xs sm:text-sm font-serif leading-relaxed text-[var(--text)]'">
-                            <div class="text-[10px] uppercase font-mono tracking-wider text-[var(--text-faint)] mb-1" 
-                                 x-text="msg.role === 'user' ? 'You (Founder)' : 'Epistemological Co-Founder'"></div>
+                        <div :class="msg.is_error ? 'mr-4 bg-[var(--error-bg)] border border-[var(--error-border)] p-4 rounded-[var(--radius-md)] text-xs sm:text-sm text-[var(--error-text)] font-sans' : (msg.role === 'user' ? 'ml-8 bg-[var(--bg-sunken)] p-3.5 rounded-[var(--radius-md)] text-xs sm:text-sm text-[var(--text)]' : 'mr-4 bg-[var(--bg-raised)] border border-[var(--border)] p-4 rounded-[var(--radius-md)] text-xs sm:text-sm font-serif leading-relaxed text-[var(--text)]')">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="text-[10px] uppercase font-mono tracking-wider text-[var(--text-faint)]" 
+                                     x-text="msg.is_error ? 'System Alert' : (msg.role === 'user' ? 'You (Founder)' : 'Epistemological Co-Founder')"></div>
+                                <template x-if="msg.is_error">
+                                    <button @click="showKeyModal = true" type="button" class="text-[11px] underline font-sans text-[var(--error-text)] hover:opacity-80">Fix API Key →</button>
+                                </template>
+                            </div>
                             <p class="whitespace-pre-line" x-text="msg.content"></p>
                         </div>
 

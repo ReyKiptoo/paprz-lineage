@@ -14,7 +14,7 @@ class VentureGeminiService
     public function __construct()
     {
         $this->defaultApiKey = config('services.gemini.key');
-        $this->defaultModel = config('services.gemini.model', 'gemini-1.5-flash');
+        $this->defaultModel = config('services.gemini.model', 'gemini-3.8-flash');
     }
 
     /**
@@ -60,6 +60,72 @@ class VentureGeminiService
     }
 
     /**
+     * Test connection to Gemini API with a fast ping request.
+     */
+    public function testConnection(?string $userApiKey = null): array
+    {
+        $defaultKey = config('services.gemini.key');
+        $apiKey = $userApiKey !== null ? trim($userApiKey) : ($this->defaultApiKey ?: $defaultKey);
+
+        if (empty($apiKey)) {
+            return [
+                'status' => 'error',
+                'code' => 401,
+                'message' => 'No API key provided. Please paste your Google AI Studio API key.',
+            ];
+        }
+
+        $startTime = microtime(true);
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->defaultModel}:generateContent?key={$apiKey}";
+
+        try {
+            $response = Http::timeout(10)->post($url, [
+                'contents' => [
+                    [
+                        'role' => 'user',
+                        'parts' => [
+                            ['text' => 'Ping. Respond with exactly the word "PONG".']
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'temperature' => 0.0,
+                    'maxOutputTokens' => 10,
+                ],
+            ]);
+
+            $latencyMs = (int) round((microtime(true) - $startTime) * 1000);
+
+            if ($response->successful()) {
+                $replyText = trim($response->json('candidates.0.content.parts.0.text') ?? '');
+                return [
+                    'status' => 'success',
+                    'model' => $this->defaultModel,
+                    'latency_ms' => $latencyMs,
+                    'reply' => $replyText,
+                    'message' => "Connected successfully to Google Gemini ({$this->defaultModel}) in {$latencyMs}ms.",
+                ];
+            }
+
+            $errBody = $response->json();
+            $code = $response->status();
+            $msg = $errBody['error']['message'] ?? 'API request was rejected by Google Gemini.';
+
+            return [
+                'status' => 'error',
+                'code' => $code,
+                'message' => "Google API Error (HTTP {$code}): {$msg}",
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => 'error',
+                'code' => 500,
+                'message' => 'Connection failed: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Interrogate the founder in a multi-turn Socratic dialogue with full canvas context.
      */
     public function interrogateDialogue(array $messages, array $canvasBlocks, ?string $userApiKey = null): array
@@ -74,6 +140,12 @@ class VentureGeminiService
                 }
             } catch (\Throwable $e) {
                 Log::warning('Gemini interrogation dialogue failed: ' . $e->getMessage());
+                return [
+                    'error' => true,
+                    'status_code' => 500,
+                    'reply' => "⚠️ **Gemini Connection Error**\n\n" . $e->getMessage() . "\n\nPlease check your internet connection or verify your API key in 'Connect Gemini'.",
+                    'proposed_block' => null,
+                ];
             }
         }
 
@@ -181,8 +253,17 @@ EOT;
         ]);
 
         if (! $response->successful()) {
-            Log::warning('Gemini API call failed with status: ' . $response->status() . ' body: ' . $response->body());
-            return null;
+            $status = $response->status();
+            $errBody = $response->json();
+            $msg = $errBody['error']['message'] ?? 'Gemini API call failed with status ' . $status;
+            Log::warning("Gemini API call failed with status: {$status} body: " . $response->body());
+
+            return [
+                'error' => true,
+                'status_code' => $status,
+                'reply' => "⚠️ **Google Gemini API Error (HTTP {$status})**\n\n{$msg}\n\n*Please verify your API key and billing in 'Connect Gemini' or visit https://aistudio.google.com.*",
+                'proposed_block' => null,
+            ];
         }
 
         $parsed = $this->extractJsonFromResponse($response->json());
@@ -191,10 +272,20 @@ EOT;
             $parsed['proposed_block']['status'] = 'draft';
             $parsed['proposed_block']['sealed'] = false;
             $parsed['proposed_block']['challenged'] = false;
-            $parsed['proposed_block']['source'] = 'interrogation';
+            $parsed['proposed_block']['source'] = 'gemini';
             $parsed['proposed_block']['created_at'] = now()->toIso8601String();
         }
 
+        if (! $parsed) {
+            return [
+                'error' => true,
+                'reply' => "⚠️ Gemini responded, but the response could not be parsed as JSON. Please try again.",
+                'proposed_block' => null,
+            ];
+        }
+
+        $parsed['is_live_gemini'] = true;
+        $parsed['model'] = $this->defaultModel;
         return $parsed;
     }
 
@@ -204,6 +295,15 @@ EOT;
     protected function heuristicDialogueFallback(array $messages, array $canvasBlocks): array
     {
         $last = strtolower(end($messages)['content'] ?? '');
+
+        // Founder asks if they are talking to Gemini or an LLM
+        if (str_contains($last, 'talking to gemini') || str_contains($last, 'are you gemini') || str_contains($last, 'real llm') || str_contains($last, 'am i talking to') || str_contains($last, 'is this an ai')) {
+            return [
+                'reply' => "No, you are currently in **Offline Simulation Mode**.\n\nYour requests are being handled locally by the heuristic engine because no valid Gemini API key is verified.\n\nTo connect to live Google Gemini 1.5 Flash:\n1. Click **Connect Gemini** in the top navigation bar.\n2. Paste your Google AI Studio API key.\n3. Click **Test API Connection** to verify your key and account quota.\n4. Click **Save key**.",
+                'proposed_block' => null,
+                'is_offline' => true
+            ];
+        }
 
         // 1. Founder asks what is needed to make the next block or asks what to do
         if (str_contains($last, 'what do you need') || str_contains($last, 'next card') || str_contains($last, 'next block') || str_contains($last, 'how do we make')) {
