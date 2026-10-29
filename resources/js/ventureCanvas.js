@@ -41,6 +41,18 @@ export function ventureCanvasApp(initialBlocks = []) {
         branchCustomPrompt: '',
         branchType: 'validate', // 'validate' | 'horizon' | 'paradox' | 'finding'
 
+        // Dialogue / Interrogation Co-pilot State
+        isDialogueOpen: false,
+        dialogueMessages: [
+            {
+                role: 'model',
+                content: "I am your Epistemological Co-Founder. I have your full canvas in context:\n• Block 01: The Liquidity & Distribution Bottleneck\n• Block 02: The Per-Item Micro-Pricing Engine (KES 3 CATs / KES 5 Exams)\n• Block 03: The Web-to-Mobile Anti-Piracy Funnel\n\nLet's interrogate: When charging KES 3 for a CAT, how do you handle Safaricom STK push fee overhead and PIN fatigue? Are you doing per-paper prompts or an in-app prepaid coin wallet?",
+                proposed_block: null
+            }
+        ],
+        dialogueInput: '',
+        isDialogueSending: false,
+
         // SVG Connectors
         connectors: [],
 
@@ -48,13 +60,15 @@ export function ventureCanvasApp(initialBlocks = []) {
             this.applyTheme(this.theme);
             this.tempApiKey = this.apiKey;
             
-            // Try loading from localStorage first, else use pre-seeded foundations
+            // Try loading from localStorage, and ensure all server initialBlocks are merged in!
             const saved = localStorage.getItem('paprz_inquiry_blocks');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
                     if (Array.isArray(parsed) && parsed.length > 0) {
-                        this.blocks = parsed;
+                        const existingIds = new Set(parsed.map(b => b.id));
+                        const missingInitial = initialBlocks.filter(b => !existingIds.has(b.id));
+                        this.blocks = [...parsed, ...missingInitial];
                     } else {
                         this.blocks = initialBlocks;
                     }
@@ -76,10 +90,89 @@ export function ventureCanvasApp(initialBlocks = []) {
 
             this.$nextTick(() => {
                 this.updateConnectors();
-                if (this.blocks.length > 0) {
+                if (this.blocks.length > 0 && !this.selectedBlockId) {
                     this.selectedBlockId = this.blocks[0].id;
                 }
             });
+        },
+
+        // Dialogue actions
+        openDialogue() {
+            this.isDialogueOpen = true;
+        },
+
+        closeDialogue() {
+            this.isDialogueOpen = false;
+        },
+
+        async sendDialogueMessage() {
+            const text = this.dialogueInput.trim();
+            if (!text || this.isDialogueSending) return;
+
+            this.dialogueMessages.push({
+                role: 'user',
+                content: text
+            });
+            this.dialogueInput = '';
+            this.isDialogueSending = true;
+
+            try {
+                const response = await fetch('/api/inquiry/dialogue', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-Gemini-Key': this.apiKey || ''
+                    },
+                    body: JSON.stringify({
+                        messages: this.dialogueMessages,
+                        canvas_blocks: this.blocks
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    this.dialogueMessages.push({
+                        role: 'model',
+                        content: data.reply,
+                        proposed_block: data.proposed_block || null
+                    });
+                }
+            } catch (err) {
+                console.error('Dialogue error:', err);
+                this.dialogueMessages.push({
+                    role: 'model',
+                    content: 'Error during dialogue: ' + err.message,
+                    proposed_block: null
+                });
+            } finally {
+                this.isDialogueSending = false;
+            }
+        },
+
+        acceptProposedBlock(proposedBlock) {
+            if (!proposedBlock) return;
+            const newBlock = { ...proposedBlock };
+            if (!newBlock.id) newBlock.id = 'blk_v_' + Math.random().toString(36).substring(2, 9);
+            newBlock.status = 'draft';
+            newBlock.sealed = false;
+
+            this.blocks.push(newBlock);
+            this.selectedBlockId = newBlock.id;
+            this.persistBlocks();
+
+            this.$nextTick(() => {
+                const el = document.getElementById('card-' + newBlock.id);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                this.updateConnectors();
+            });
+
+            this.showToast(`Forged proposed block: "${newBlock.title}"`);
         },
 
         // Theme management

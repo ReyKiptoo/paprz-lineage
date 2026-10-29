@@ -64,6 +64,15 @@
                         <span>Consolidate master truth</span>
                     </button>
 
+                    <!-- Interrogate Me Dialogue Co-Pilot -->
+                    <button @click="openDialogue()"
+                            type="button"
+                            class="btn-primary !h-8 !px-3 !text-xs flex items-center gap-1.5"
+                            title="Open Socratic founder interrogation co-pilot">
+                        <span>Interrogate me</span>
+                        <span class="text-[10px]">💬</span>
+                    </button>
+
                     <!-- Save to Bedrock -->
                     <button @click="saveToBedrock()"
                             type="button"
@@ -763,6 +772,105 @@
                         class="btn-primary !h-8 !px-3 !text-xs">
                     <span x-text="isChallenging ? 'Evaluating...' : 'Evaluate challenge'"></span>
                 </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- INTERROGATION CO-PILOT CHAT DRAWER         -->
+    <!-- ========================================== -->
+    <div x-show="isDialogueOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-hidden flex justify-end"
+         @keydown.escape.window="closeDialogue()">
+        
+        <!-- Scrim -->
+        <div class="fixed inset-0 bg-[rgba(31,30,29,0.3)] transition-opacity"
+             @click="closeDialogue()"></div>
+
+        <!-- Dialogue Panel -->
+        <div class="relative w-full max-w-lg bg-[var(--bg-raised)] border-l border-[var(--border)] shadow-[var(--shadow-3)] h-full flex flex-col z-10">
+            
+            <!-- Drawer Header -->
+            <div class="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between gap-3 bg-[var(--bg-sunken)]">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>
+                        <h3 class="font-serif text-lg font-normal text-[var(--text)]">Founder Interrogation Co-Pilot</h3>
+                    </div>
+                    <p class="text-xs text-[var(--text-muted)] font-mono" x-text="'Context: ' + totalCount + ' blocks injected'"></p>
+                </div>
+                <button @click="closeDialogue()" class="btn-ghost !h-7 !px-2 text-xs">✕</button>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+                <template x-for="(msg, mIndex) in dialogueMessages" :key="mIndex">
+                    <div class="space-y-2">
+                        <!-- Message Bubble -->
+                        <div :class="msg.role === 'user' ? 'ml-8 bg-[var(--bg-sunken)] p-3.5 rounded-[var(--radius-md)] text-xs sm:text-sm text-[var(--text)]' : 'mr-4 bg-[var(--bg-raised)] border border-[var(--border)] p-4 rounded-[var(--radius-md)] text-xs sm:text-sm font-serif leading-relaxed text-[var(--text)]'">
+                            <div class="text-[10px] uppercase font-mono tracking-wider text-[var(--text-faint)] mb-1" 
+                                 x-text="msg.role === 'user' ? 'You (Founder)' : 'Epistemological Co-Founder'"></div>
+                            <p class="whitespace-pre-line" x-text="msg.content"></p>
+                        </div>
+
+                        <!-- Proposed Block Card (If Model generated one) -->
+                        <template x-if="msg.proposed_block">
+                            <div class="p-4 rounded-[var(--radius-md)] bg-[var(--bg-sunken)] border border-[var(--border-strong)] space-y-2 text-xs sm:text-sm">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-sans text-[11px] font-medium text-[var(--accent)] flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)]"></span>
+                                        <span>Proposed Story Block</span>
+                                    </span>
+                                    <span class="text-[10px] font-mono text-[var(--text-faint)]" 
+                                          x-text="msg.proposed_block.branch_type || 'hypothesis'"></span>
+                                </div>
+
+                                <h4 class="font-serif text-base font-normal text-[var(--text)]" 
+                                    x-text="msg.proposed_block.title"></h4>
+                                <p class="font-serif italic text-xs text-[var(--text-muted)]" 
+                                   x-text="msg.proposed_block.hypothesis"></p>
+
+                                <div class="pt-2 flex items-center justify-between border-t border-[var(--border)]">
+                                    <span class="text-[11px] text-[var(--text-faint)]" 
+                                          x-text="msg.proposed_block.connection_reason || 'Connected hypothesis'"></span>
+                                    <button @click="acceptProposedBlock(msg.proposed_block)"
+                                            type="button"
+                                            class="btn-primary !h-7 !px-3 !text-xs">
+                                        <span>Add to canvas 🧱</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <div x-show="isDialogueSending" class="flex items-center gap-2 text-xs text-[var(--text-muted)] font-serif italic p-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-ping"></span>
+                    <span>Interrogating assumptions...</span>
+                </div>
+            </div>
+
+            <!-- Dialogue Input Bar -->
+            <div class="p-3 sm:p-4 border-t border-[var(--border)] bg-[var(--bg-sunken)]">
+                <form @submit.prevent="sendDialogueMessage()" class="space-y-2">
+                    <textarea x-model="dialogueInput"
+                              @keydown.enter.prevent="if(!$event.shiftKey) sendDialogueMessage()"
+                              rows="2"
+                              placeholder="Answer questions, debate assumptions, or explore new ideas..."
+                              class="w-full px-3 py-2 rounded-[var(--radius-md)] bg-[var(--bg-raised)] border border-[var(--border-strong)] text-[var(--text)] placeholder-[var(--text-faint)] focus:outline-none focus:border-[var(--accent)] text-xs sm:text-sm resize-none"
+                              style="outline: none !important;"></textarea>
+                    
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-[10px] text-[var(--text-faint)]">Press Enter to send</span>
+                        <button type="submit"
+                                :disabled="!dialogueInput.trim() || isDialogueSending"
+                                class="btn-primary !h-7 !px-3 !text-xs">
+                            <span>Send response</span>
+                        </button>
+                    </div>
+                </form>
             </div>
 
         </div>

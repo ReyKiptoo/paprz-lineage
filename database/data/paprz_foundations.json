@@ -1,155 +1,155 @@
 [
-    {
-        "id": "blk_paprz_01",
-        "parent_id": null,
-        "branch_type": "genesis",
-        "connection_reason": "Genesis Foundation",
-        "title": "The Liquidity & Distribution Bottleneck",
-        "category": "Distribution & Liquidity",
-        "status": "draft",
-        "sealed": false,
-        "sealed_at": null,
-        "challenged": false,
-        "source": "founder",
-        "hypothesis": "University past exam papers are trapped in chaotic WhatsApp groups, low-quality photos, and physical photocopy shops; organizing them into a unified web and mobile distribution platform will establish academic revision liquidity and test students' willingness to pay.",
-        "things_we_know": [
-            "Kenyan university revision materials are intensely fragmented across ephemeral WhatsApp groups and student circles.",
-            "Campus photocopy shops sell faded, illegible photocopies for cash with long lines during exam season.",
-            "Students experience acute time scarcity and revision anxiety two weeks prior to end-of-semester examinations."
-        ],
-        "experiment": {
-            "apparatus": "Mobile-first responsive web app and native mobile distribution client, centralized relational catalog (School > Course > Unit > Paper), and payment trigger test.",
-            "method": "Catalog foundational university units across engineering and sciences, seed verified papers, distribute access links through class representatives, and track organic download velocity vs willingness to pay.",
-            "variable_tested": "Student adoption velocity, search latency vs WhatsApp scrolling, and conversion to paid access."
-        },
-        "results": {
-            "observation": "Students rapidly adopt the platform because finding an exam takes under 5 seconds vs 15+ minutes in chat logs.",
-            "lesson": "Instant zero-friction search and clean presentation break entrenched peer-to-peer distribution habits.",
-            "significance": "Validates the primary liquidity driver of Paprz before expanding into paid solutions and native mobile app loops."
-        },
-        "next_paths": [
-            {
-                "type": "validate",
-                "label": "Validate & Deepen",
-                "question": "Will students pay KES 3-5 per paper when the price is perceived as negligible compared to photocopy costs?",
-                "teaser": "Test per-paper micro-pricing elasticity."
-            },
-            {
-                "type": "horizon",
-                "label": "New Horizon",
-                "question": "Can the public web app serve as an SEO discovery proof while routing actual consumption to a secure native mobile app?",
-                "teaser": "Explore the web discovery to mobile reader funnel."
-            },
-            {
-                "type": "paradox",
-                "label": "Wait, how is this possible?!",
-                "question": "If students pay KES 5 once, what prevents one student from distributing the paper to 100 classmates on WhatsApp?",
-                "teaser": "Expose the catastrophic leakage risk of single purchases."
-            }
-        ],
-        "challenge_notes": null,
-        "upstreamAlert": null
+  {
+    "id": "blk_paprz_01",
+    "parent_id": null,
+    "branch_type": "genesis",
+    "connection_reason": "Genesis Foundation",
+    "title": "The Liquidity & Distribution Bottleneck",
+    "category": "Distribution & Liquidity",
+    "status": "draft",
+    "sealed": false,
+    "sealed_at": null,
+    "challenged": false,
+    "source": "founder",
+    "hypothesis": "University past exam papers are trapped in chaotic WhatsApp groups, low-quality photos, and physical photocopy shops; organizing them into a unified web and mobile distribution platform will establish academic revision liquidity and test students' willingness to pay.",
+    "things_we_know": [
+      "Kenyan university revision materials are intensely fragmented across ephemeral WhatsApp groups and student circles.",
+      "Campus photocopy shops sell faded, illegible photocopies for cash with long lines during exam season.",
+      "Students experience acute time scarcity and revision anxiety two weeks prior to end-of-semester examinations."
+    ],
+    "experiment": {
+      "apparatus": "Mobile-first responsive web app and native mobile distribution client, centralized relational catalog (School > Course > Unit > Paper), and payment trigger test.",
+      "method": "Catalog foundational university units across engineering and sciences, seed verified papers, distribute access links through class representatives, and track organic download velocity vs willingness to pay.",
+      "variable_tested": "Student adoption velocity, search latency vs WhatsApp scrolling, and conversion to paid access."
     },
-    {
-        "id": "blk_paprz_02",
-        "parent_id": "blk_paprz_01",
-        "branch_type": "validate",
-        "connection_reason": "Validate: Per-paper micro-pricing (KES 3-5) to minimize payment resistance",
-        "title": "The Per-Item Micro-Pricing Engine",
-        "category": "Unit Economics & Pricing",
-        "status": "draft",
-        "sealed": false,
-        "sealed_at": null,
-        "challenged": false,
-        "source": "founder",
-        "hypothesis": "Pricing individual academic papers at negligible impulse thresholds (~KES 5 for final exams, ~KES 3 for CATs) eliminates purchase hesitation while giving flexibility to introduce high-value content (e.g. project reports up to KES 100) later.",
-        "things_we_know": [
-            "Physical campus photocopy shops charge KES 3\u20135 per printed double-sided A4 page.",
-            "Students resist large upfront semester commitments but spend small coins impulsively when stressed.",
-            "In JKUAT School of Engineering, past CATs and exams are exceptionally scarce and directly impact passing grades."
-        ],
-        "experiment": {
-            "apparatus": "Safaricom M-Pesa micro-billing trigger, tiered price catalog (CATs at KES 3, Exams at KES 5), and telemetry event tracker.",
-            "method": "Release clean papers across 30 high-demand JKUAT engineering units; measure completion rate of KES 3-5 micro-purchases vs drop-off at payment prompt.",
-            "variable_tested": "Impulse purchase conversion rate at KES 3 (CATs) and KES 5 (Exams) vs payment prompt abandonment."
-        },
-        "results": {
-            "observation": "Students perceive KES 3-5 as practically free compared to the time and money of visiting the photocopy shop.",
-            "lesson": "When digital price parity matches or beats physical photocopy costs, friction shifts entirely from monetary willingness to payment speed.",
-            "significance": "Validates the initial monetization engine and establishes the stepping stone for premium KES 100 project reports."
-        },
-        "next_paths": [
-            {
-                "type": "validate",
-                "label": "Validate & Deepen",
-                "question": "What is the M-Pesa transaction fee overhead on processing micro KES 3-5 payments?",
-                "teaser": "Stress-test payment gateway transaction margins."
-            },
-            {
-                "type": "horizon",
-                "label": "New Horizon",
-                "question": "Can we introduce premium project reports, lab manuals, and industrial attachment templates at KES 50-100?",
-                "teaser": "Expand into higher-ticket academic assets."
-            },
-            {
-                "type": "paradox",
-                "label": "Wait, how is this possible?!",
-                "question": "If payment is only KES 5, why wouldn't one classmate buy it and immediately share the screenshot to everyone?",
-                "teaser": "Expose the urgent need for in-app anti-piracy protection."
-            }
-        ],
-        "challenge_notes": null,
-        "upstreamAlert": null
+    "results": {
+      "observation": "Students rapidly adopt the platform because finding an exam takes under 5 seconds vs 15+ minutes in chat logs.",
+      "lesson": "Instant zero-friction search and clean presentation break entrenched peer-to-peer distribution habits.",
+      "significance": "Validates the primary liquidity driver of Paprz before expanding into paid solutions and native mobile app loops."
     },
-    {
-        "id": "blk_paprz_03",
-        "parent_id": "blk_paprz_02",
-        "branch_type": "horizon",
-        "connection_reason": "Horizon: Web catalog proof driving secure native mobile reader",
-        "title": "The Web-to-Mobile Anti-Piracy Funnel",
-        "category": "Architecture & Content Protection",
-        "status": "draft",
-        "sealed": false,
-        "sealed_at": null,
-        "challenged": false,
-        "source": "founder",
-        "hypothesis": "Deploying the web app strictly for search discovery and catalog proof, while enforcing in-app reading with screenshot blocking (FLAG_SECURE) inside a native mobile app, prevents WhatsApp piracy without sacrificing organic web search traffic.",
-        "things_we_know": [
-            "Mobile web browsers cannot block screenshots, screen recording, or raw PDF cache inspection.",
-            "If a single student extracts a clean PDF, peer WhatsApp redistribution collapses the addressable market for that entire class cohort.",
-            "Students discover links primarily on the web (WhatsApp group links, Google searches for unit codes like SMA 2100)."
-        ],
-        "experiment": {
-            "apparatus": "SEO-indexed web catalog with unit search and page-1 watermarked preview, paired with a lightweight native Android Flutter reader enforcing FLAG_SECURE.",
-            "method": "Direct students from web search results to the native app to unlock full papers; track web-to-install drop-off rate vs external WhatsApp leak incidents.",
-            "variable_tested": "Web-to-app install conversion rate and observed WhatsApp group leakage rate."
-        },
-        "results": {
-            "observation": "High urgency and verified catalog proof on the web motivate students to download the mobile app to read the paper safely.",
-            "lesson": "Public web discovery creates trust and demand; private native application runtime protects intellectual property and pricing integrity.",
-            "significance": "Solves the academic piracy dilemma, defending per-paper monetization while maintaining organic web discovery."
-        },
-        "next_paths": [
-            {
-                "type": "validate",
-                "label": "Validate & Deepen",
-                "question": "What is the maximum mobile APK size before mobile cellular data bundle costs cause install drop-off?",
-                "teaser": "Measure bundle friction during app installation."
-            },
-            {
-                "type": "horizon",
-                "label": "New Horizon",
-                "question": "Can the mobile app store encrypted offline copies so students can revise in hostel rooms with dead Wi-Fi?",
-                "teaser": "Develop encrypted offline document storage."
-            },
-            {
-                "type": "paradox",
-                "label": "Wait, how is this possible?!",
-                "question": "Can a student bypass FLAG_SECURE by simply photographing their screen with another smartphone?",
-                "teaser": "Analyze the analog camera loophole and deterrence limits."
-            }
-        ],
-        "challenge_notes": null,
-        "upstreamAlert": null
-    }
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "Will students pay KES 3-5 per paper when the price is perceived as negligible compared to photocopy costs?",
+        "teaser": "Test per-paper micro-pricing elasticity."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can the public web app serve as an SEO discovery proof while routing actual consumption to a secure native mobile app?",
+        "teaser": "Explore the web discovery to mobile reader funnel."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "If students pay KES 5 once, what prevents one student from distributing the paper to 100 classmates on WhatsApp?",
+        "teaser": "Expose the catastrophic leakage risk of single purchases."
+      }
+    ],
+    "challenge_notes": null,
+    "upstreamAlert": null
+  },
+  {
+    "id": "blk_paprz_02",
+    "parent_id": "blk_paprz_01",
+    "branch_type": "validate",
+    "connection_reason": "Validate: Per-paper micro-pricing (KES 3-5) to minimize payment resistance",
+    "title": "The Per-Item Micro-Pricing Engine",
+    "category": "Unit Economics & Pricing",
+    "status": "draft",
+    "sealed": false,
+    "sealed_at": null,
+    "challenged": false,
+    "source": "founder",
+    "hypothesis": "Pricing individual academic papers at negligible impulse thresholds (~KES 5 for final exams, ~KES 3 for CATs) eliminates purchase hesitation while giving flexibility to introduce high-value content (e.g. project reports up to KES 100) later.",
+    "things_we_know": [
+      "Physical campus photocopy shops charge KES 3–5 per printed double-sided A4 page.",
+      "Students resist large upfront semester commitments but spend small coins impulsively when stressed.",
+      "In JKUAT School of Engineering, past CATs and exams are exceptionally scarce and directly impact passing grades."
+    ],
+    "experiment": {
+      "apparatus": "Safaricom M-Pesa micro-billing trigger, tiered price catalog (CATs at KES 3, Exams at KES 5), and telemetry event tracker.",
+      "method": "Release clean papers across 30 high-demand JKUAT engineering units; measure completion rate of KES 3-5 micro-purchases vs drop-off at payment prompt.",
+      "variable_tested": "Impulse purchase conversion rate at KES 3 (CATs) and KES 5 (Exams) vs payment prompt abandonment."
+    },
+    "results": {
+      "observation": "Students perceive KES 3-5 as practically free compared to the time and money of visiting the photocopy shop.",
+      "lesson": "When digital price parity matches or beats physical photocopy costs, friction shifts entirely from monetary willingness to payment speed.",
+      "significance": "Validates the initial monetization engine and establishes the stepping stone for premium KES 100 project reports."
+    },
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "What is the M-Pesa transaction fee overhead on processing micro KES 3-5 payments?",
+        "teaser": "Stress-test payment gateway transaction margins."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can we introduce premium project reports, lab manuals, and industrial attachment templates at KES 50-100?",
+        "teaser": "Expand into higher-ticket academic assets."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "If payment is only KES 5, why wouldn't one classmate buy it and immediately share the screenshot to everyone?",
+        "teaser": "Expose the urgent need for in-app anti-piracy protection."
+      }
+    ],
+    "challenge_notes": null,
+    "upstreamAlert": null
+  },
+  {
+    "id": "blk_paprz_03",
+    "parent_id": "blk_paprz_02",
+    "branch_type": "horizon",
+    "connection_reason": "Horizon: Web catalog proof driving secure native mobile reader",
+    "title": "The Web-to-Mobile Anti-Piracy Funnel",
+    "category": "Architecture & Content Protection",
+    "status": "draft",
+    "sealed": false,
+    "sealed_at": null,
+    "challenged": false,
+    "source": "founder",
+    "hypothesis": "Deploying the web app strictly for search discovery and catalog proof, while enforcing in-app reading with screenshot blocking (FLAG_SECURE) inside a native mobile app, prevents WhatsApp piracy without sacrificing organic web search traffic.",
+    "things_we_know": [
+      "Mobile web browsers cannot block screenshots, screen recording, or raw PDF cache inspection.",
+      "If a single student extracts a clean PDF, peer WhatsApp redistribution collapses the addressable market for that entire class cohort.",
+      "Students discover links primarily on the web (WhatsApp group links, Google searches for unit codes like SMA 2100)."
+    ],
+    "experiment": {
+      "apparatus": "SEO-indexed web catalog with unit search and page-1 watermarked preview, paired with a lightweight native Android Flutter reader enforcing FLAG_SECURE.",
+      "method": "Direct students from web search results to the native app to unlock full papers; track web-to-install drop-off rate vs external WhatsApp leak incidents.",
+      "variable_tested": "Web-to-app install conversion rate and observed WhatsApp group leakage rate."
+    },
+    "results": {
+      "observation": "High urgency and verified catalog proof on the web motivate students to download the mobile app to read the paper safely.",
+      "lesson": "Public web discovery creates trust and demand; private native application runtime protects intellectual property and pricing integrity.",
+      "significance": "Solves the academic piracy dilemma, defending per-paper monetization while maintaining organic web discovery."
+    },
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "What is the maximum mobile APK size before mobile cellular data bundle costs cause install drop-off?",
+        "teaser": "Measure bundle friction during app installation."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can the mobile app store encrypted offline copies so students can revise in hostel rooms with dead Wi-Fi?",
+        "teaser": "Develop encrypted offline document storage."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "Can a student bypass FLAG_SECURE by simply photographing their screen with another smartphone?",
+        "teaser": "Analyze the analog camera loophole and deterrence limits."
+      }
+    ],
+    "challenge_notes": null,
+    "upstreamAlert": null
+  }
 ]

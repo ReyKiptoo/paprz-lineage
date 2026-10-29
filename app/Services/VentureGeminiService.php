@@ -60,6 +60,178 @@ class VentureGeminiService
     }
 
     /**
+     * Interrogate the founder in a multi-turn Socratic dialogue with full canvas context.
+     */
+    public function interrogateDialogue(array $messages, array $canvasBlocks, ?string $userApiKey = null): array
+    {
+        $apiKey = $userApiKey ?: $this->defaultApiKey;
+
+        if ($apiKey) {
+            try {
+                $result = $this->callGeminiForDialogue($messages, $canvasBlocks, $apiKey);
+                if ($result) {
+                    return $result;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Gemini interrogation dialogue failed: ' . $e->getMessage());
+            }
+        }
+
+        return $this->heuristicDialogueFallback($messages, $canvasBlocks);
+    }
+
+    /**
+     * Call Gemini with canvas context for interactive interrogation.
+     */
+    protected function callGeminiForDialogue(array $messages, array $canvasBlocks, string $apiKey): ?array
+    {
+        $blockSummaries = array_map(function ($b) {
+            $parent = $b['parent_id'] ? "(Child of {$b['parent_id']})" : "(Root)";
+            $status = $b['sealed'] ? "Proven" : "Draft";
+            return "Block [{$b['id']}] {$parent} - {$b['title']} [{$status}]\n"
+                . "  Hypothesis: {$b['hypothesis']}\n"
+                . "  Lesson: " . ($b['results']['lesson'] ?? 'Under test') . "\n";
+        }, $canvasBlocks);
+
+        $canvasContext = count($blockSummaries) > 0 
+            ? "CURRENT CANVAS HYPOTHESIS TREE:\n" . implode("\n", $blockSummaries)
+            : "Canvas is currently empty.";
+
+        $systemInstruction = <<<EOT
+You are the First-Principles Startup Epistemology Co-Founder for 'Paprz' (academic exam archive & revision engine for university students in Kenya).
+You are sitting across the table from the founder in an intense, Socratic venture interrogation dialogue.
+
+{$canvasContext}
+
+Your Responsibilities:
+1. Speak as a thoughtful, sharp, and supportive technical co-founder. Use calm, specific, concise language. No hype.
+2. Continually reference their actual canvas blocks. Point out tensions, unit economic realities (M-Pesa transaction fees, Safaricom Daraja STK push minimums, student revision panic windows, analog phone screenshot loopholes).
+3. Do NOT invent a block on every turn. Ask sharp, probing questions to uncover their real thoughts first.
+4. When the founder clarifies a specific decision (e.g. how they handle payments, caching, offline readers, pricing), synthesize and PROPOSE a structured 5-facet building block! The block can either connect to an existing parent or be an independent root.
+
+Always return strictly valid JSON matching this schema:
+{
+  "reply": "Your conversational dialogue, interrogation feedback, and next probing question.",
+  "proposed_block": null or {
+    "title": "Short evocative title (3-6 words)",
+    "category": "e.g. Unit Economics, Architecture, Distribution, Defensibility",
+    "hypothesis": "1-2 sentences stating the falsifiable assumption under test",
+    "things_we_know": [
+      "Prior fact 1",
+      "Prior fact 2"
+    ],
+    "experiment": {
+      "apparatus": "Software tools, prototype, payment gateway, cohort test",
+      "method": "Step-by-step test procedure executed",
+      "variable_tested": "The specific metric isolated"
+    },
+    "results": {
+      "observation": "What happens or is observed in testing",
+      "lesson": "Universal product law or business rule deduced",
+      "significance": "Why this creates a competitive moat"
+    },
+    "next_paths": [
+      { "type": "validate", "label": "Validate & Deepen", "question": "...", "teaser": "..." },
+      { "type": "horizon", "label": "New Horizon", "question": "...", "teaser": "..." },
+      { "type": "paradox", "label": "Wait, how is this possible?!", "question": "...", "teaser": "..." }
+    ],
+    "parent_id": "blk_id_to_connect_to or null if independent",
+    "branch_type": "validate" | "horizon" | "paradox" | "genesis",
+    "connection_reason": "Short reason explaining why this block connects to the parent"
+  }
+}
+EOT;
+
+        $lastMessage = end($messages)['content'] ?? '';
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->defaultModel}:generateContent?key={$apiKey}";
+
+        $response = Http::timeout(25)->post($url, [
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => $systemInstruction . "\n\nFounder message:\n\"{$lastMessage}\""]
+                    ]
+                ]
+            ],
+            'generationConfig' => [
+                'temperature' => 0.4,
+                'responseMimeType' => 'application/json',
+            ],
+        ]);
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        $parsed = $this->extractJsonFromResponse($response->json());
+        if ($parsed && isset($parsed['proposed_block']) && is_array($parsed['proposed_block'])) {
+            $parsed['proposed_block']['id'] = 'blk_v_' . Str::random(10);
+            $parsed['proposed_block']['status'] = 'draft';
+            $parsed['proposed_block']['sealed'] = false;
+            $parsed['proposed_block']['challenged'] = false;
+            $parsed['proposed_block']['source'] = 'interrogation';
+            $parsed['proposed_block']['created_at'] = now()->toIso8601String();
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Offline heuristic dialogue fallback.
+     */
+    protected function heuristicDialogueFallback(array $messages, array $canvasBlocks): array
+    {
+        $last = strtolower(end($messages)['content'] ?? '');
+
+        if (str_contains($last, 'mpesa') || str_contains($last, 'm-pesa') || str_contains($last, 'coin') || str_contains($last, 'wallet') || str_contains($last, 'pricing') || str_contains($last, 'pay')) {
+            return [
+                'reply' => "If we charge KES 3 for CATs and KES 5 for Exams, single M-Pesa STK push calls will face minimum fee friction and student PIN fatigue. An in-app prepaid coin wallet (e.g. deposit KES 20 once for 20 Paprz Coins, spend 3 coins per CAT with instant 1-tap unlock) would decouple transaction fees from single-paper unlocks.\n\nShould we formulate an In-App Micro-Credit Wallet block to test this payment UX?",
+                'proposed_block' => [
+                    'id' => 'blk_v_' . Str::random(10),
+                    'parent_id' => 'blk_paprz_02',
+                    'branch_type' => 'validate',
+                    'connection_reason' => 'Validate: Prepaid micro-coin wallet to eliminate M-Pesa STK push PIN fatigue',
+                    'title' => 'The Prepaid Token Micro-Wallet',
+                    'category' => 'Payment Infrastructure',
+                    'hypothesis' => 'Allowing students to pre-fund an in-app coin wallet (e.g. KES 20 for 20 tokens) via a single M-Pesa push eliminates multi-transaction fee overhead and accelerates impulse CAT unlocks to under 1 second.',
+                    'things_we_know' => [
+                        'Safaricom STK push prompts require network roundtrips and user PIN entry each time.',
+                        'Students studying in groups want to unlock multiple CATs in quick succession.',
+                        'Transaction fees on multiple KES 3 charges erode developer revenue.'
+                    ],
+                    'experiment' => [
+                        'apparatus' => 'Local coin ledger SQLite database + single KES 20 M-Pesa Daraja top-up trigger.',
+                        'method' => 'A/B test direct KES 5 STK push per paper vs 1-tap token deduction from prepaid wallet.',
+                        'variable_tested' => 'Repeat unlock velocity and payment completion rate.'
+                    ],
+                    'results' => [
+                        'observation' => 'Students who top up once unlock an average of 4.2 papers in a single study session.',
+                        'lesson' => 'Prepaid digital credits reduce the psychological friction of multiple micro-purchases to zero.',
+                        'significance' => 'Protects gross margins while creating in-app balance lock-in.'
+                    ],
+                    'next_paths' => [
+                        ['type' => 'validate', 'label' => 'Validate & Deepen', 'question' => 'What is the optimal minimum top-up bundle (KES 20 vs KES 50)?', 'teaser' => 'Test top-up amount sensitivity.'],
+                        ['type' => 'horizon', 'label' => 'New Horizon', 'question' => 'Can students earn free tokens by reporting typos or uploading missing CATs?', 'teaser' => 'Explore token rewards for community contribution.'],
+                        ['type' => 'paradox', 'label' => 'Wait, how is this possible?!', 'question' => 'Will students hesitate to deposit KES 20 upfront if they only need 1 specific paper right now?', 'teaser' => 'Analyze upfront deposit hesitation.']
+                    ],
+                    'status' => 'draft',
+                    'sealed' => false,
+                    'challenged' => false,
+                    'source' => 'heuristic_interrogation',
+                    'created_at' => now()->toIso8601String()
+                ]
+            ];
+        }
+
+        return [
+            'reply' => "Looking at our canvas, we have established the initial liquidity baseline (Block 01), the KES 3-5 micro-pricing thesis (Block 02), and the native mobile anti-piracy container (Block 03).\n\nWhat specific part of this sequence would you like to interrogate next? How students pay, how we acquire initial papers from lecturers/class reps, or how the offline reading experience works?",
+            'proposed_block' => null
+        ];
+    }
+
+    /**
      * Synthesize multiple connected proven blocks into one overarching Macro Truth.
      */
     public function synthesizeMacroCluster(array $blocks, ?string $userApiKey = null): array

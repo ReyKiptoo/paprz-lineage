@@ -32,6 +32,31 @@ class VentureInquiryController extends Controller
     }
 
     /**
+     * Socratic venture interrogation dialogue with full canvas context.
+     */
+    public function dialogue(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'messages' => 'required|array',
+            'canvas_blocks' => 'required|array',
+        ]);
+
+        $userApiKey = $request->header('X-Gemini-Key') ?: $request->input('api_key');
+
+        $result = $this->geminiService->interrogateDialogue(
+            messages: $validated['messages'],
+            canvasBlocks: $validated['canvas_blocks'],
+            userApiKey: $userApiKey
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'reply' => $result['reply'] ?? '',
+            'proposed_block' => $result['proposed_block'] ?? null,
+        ]);
+    }
+
+    /**
      * Forge a new 5-facet startup building block using Gemini AI or heuristic fallback.
      */
     public function forge(Request $request): JsonResponse
