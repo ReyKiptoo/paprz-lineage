@@ -1,53 +1,9 @@
 [
-  {
-    "id": "blk_paprz_01",
-    "parent_id": null,
-    "branch_type": null,
-    "connection_reason": null,
-    "title": "The Liquidity & Distribution Bottleneck",
-    "category": "Distribution & Liquidity",
-    "status": "draft",
-    "sealed": false,
-    "sealed_at": null,
-    "challenged": false,
-    "source": "founder",
-    "hypothesis": "University past exam papers are trapped in chaotic WhatsApp groups, low-quality photos, and physical photocopy shops; organizing them into a unified web and mobile distribution platform will establish academic revision liquidity and test students' willingness to pay.",
-    "things_we_know": [
-      "Kenyan university revision materials are intensely fragmented across ephemeral WhatsApp groups and student circles.",
-      "Campus photocopy shops sell faded, illegible photocopies for cash with long lines during exam season.",
-      "Students experience acute time scarcity and revision anxiety two weeks prior to end-of-semester examinations."
-    ],
-    "experiment": {
-      "apparatus": "Mobile-first responsive web app and native mobile distribution client, centralized relational catalog (School > Course > Unit > Paper), and payment trigger test.",
-      "method": "Catalog foundational university units across engineering and sciences, seed verified papers, distribute access links through class representatives, and track organic download velocity vs willingness to pay.",
-      "variable_tested": "Student adoption velocity, search latency vs WhatsApp scrolling, and conversion to paid access."
-    },
-    "results": {
-      "observation": "Students rapidly adopt the platform because finding an exam takes under 5 seconds vs 15+ minutes in chat logs.",
-      "lesson": "Instant zero-friction search and clean presentation break entrenched peer-to-peer distribution habits.",
-      "significance": "Validates the primary liquidity driver of Paprz before expanding into paid solutions and native mobile app loops."
-    },
-    "next_paths": [
-      {
-        "type": "validate",
-        "label": "Validate & Deepen",
-        "question": "Can we charge students directly for papers, or must raw questions stay free while paywalling solutions?",
-        "teaser": "Stress-test the monetization boundary."
-      },
-      {
-        "type": "horizon",
-        "label": "New Horizon",
-        "question": "How does distributing via a dedicated mobile app change student engagement and offline retention compared to the web?",
-        "teaser": "Explore the native mobile app distribution vector."
-      },
-      {
-        "type": "paradox",
-        "label": "Wait, how is this possible?!",
-        "question": "If students are used to free (though messy) WhatsApp sharing, what makes them actually complete an M-Pesa transaction?",
-        "teaser": "Expose the friction in student willingness to pay."
-      }
-    ],
-    "challenge_notes": null,
-    "upstreamAlert": null
-  }
+    {
+        "id": "blk_paprz_01",
+        "title": "The Liquidity & Distribution Bottleneck",
+        "hypothesis": "Testing bedrock save.",
+        "status": "draft",
+        "sealed": false
+    }
 ]
