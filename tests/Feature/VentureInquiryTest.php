@@ -101,25 +101,26 @@ class VentureInquiryTest extends TestCase
      */
     public function test_save_bedrock_persists_to_disk(): void
     {
-        $blocks = [
-            [
-                'id' => 'blk_paprz_01',
-                'title' => 'The Liquidity & Distribution Bottleneck',
-                'hypothesis' => 'Testing bedrock save.',
-                'status' => 'draft',
-                'sealed' => false,
-            ]
-        ];
+        $path = database_path('data/paprz_foundations.json');
+        $original = file_exists($path) ? file_get_contents($path) : '[]';
 
-        $response = $this->postJson('/api/inquiry/save-bedrock', [
-            'blocks' => $blocks,
-        ]);
+        try {
+            $blocks = json_decode($original, true) ?: [
+                ['id' => 'blk_paprz_01', 'title' => 'The Liquidity & Distribution Bottleneck', 'hypothesis' => 'Test', 'status' => 'draft', 'sealed' => false]
+            ];
 
-        $response->assertStatus(200);
-        $response->assertJson([
-            'status' => 'success',
-        ]);
+            $response = $this->postJson('/api/inquiry/save-bedrock', [
+                'blocks' => $blocks,
+            ]);
 
-        $this->assertFileExists(database_path('data/paprz_foundations.json'));
+            $response->assertStatus(200);
+            $response->assertJson([
+                'status' => 'success',
+            ]);
+
+            $this->assertFileExists($path);
+        } finally {
+            file_put_contents($path, $original);
+        }
     }
 }
