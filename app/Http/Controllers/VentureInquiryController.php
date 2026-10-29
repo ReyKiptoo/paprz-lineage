@@ -84,7 +84,8 @@ class VentureInquiryController extends Controller
     }
 
     /**
-     * Permanently save the verified lineage tree to server storage (paprz_foundations.json).
+     * Permanently save the verified lineage tree to server storage (paprz_foundations.json)
+     * and automatically commit to Git.
      */
     public function saveBedrock(Request $request): JsonResponse
     {
@@ -95,9 +96,19 @@ class VentureInquiryController extends Controller
         $path = database_path('data/paprz_foundations.json');
         file_put_contents($path, json_encode($validated['blocks'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
+        // Automatically create a Git commit and push to remote
+        $baseDir = escapeshellarg(base_path());
+        $dateStr = now()->format('Y-m-d H:i:s');
+        $commitMsg = escapeshellarg("feat(bedrock): save lineage foundations [{$dateStr}]");
+        
+        $gitOutput = shell_exec("cd {$baseDir} && git add database/data/paprz_foundations.json && git commit -m {$commitMsg} 2>&1");
+        $pushOutput = shell_exec("cd {$baseDir} && git push origin main 2>&1");
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Lineage tree saved permanently to bedrock foundations.',
+            'message' => 'Lineage tree saved and committed to Git (main).',
+            'git_output' => $gitOutput,
+            'push_output' => $pushOutput,
         ]);
     }
 

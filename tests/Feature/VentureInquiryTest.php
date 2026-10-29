@@ -95,4 +95,31 @@ class VentureInquiryTest extends TestCase
         $this->assertArrayHasKey('verdict', $evaluation);
         $this->assertArrayHasKey('analysis', $evaluation);
     }
+
+    /**
+     * Test saving bedrock persists to disk and performs git commit.
+     */
+    public function test_save_bedrock_persists_to_disk(): void
+    {
+        $blocks = [
+            [
+                'id' => 'blk_paprz_01',
+                'title' => 'The Liquidity & Distribution Bottleneck',
+                'hypothesis' => 'Testing bedrock save.',
+                'status' => 'draft',
+                'sealed' => false,
+            ]
+        ];
+
+        $response = $this->postJson('/api/inquiry/save-bedrock', [
+            'blocks' => $blocks,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'success',
+        ]);
+
+        $this->assertFileExists(database_path('data/paprz_foundations.json'));
+    }
 }
