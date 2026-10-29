@@ -1,6 +1,6 @@
 /**
  * Paprz Lineage - Startup Epistemology & Hypothesis Thought Engine
- * First-Principles Business & Technical Building Blocks powered by Gemini API
+ * Designed according to DESIGN.md: calm, warm neutrals, literary voice, quiet restraint.
  */
 
 export function ventureCanvasApp(initialBlocks = []) {
@@ -10,7 +10,10 @@ export function ventureCanvasApp(initialBlocks = []) {
         activeBlockId: null,
         inputPrompt: '',
         isLoading: false,
-        loadingMessage: 'Synthesizing venture building block...',
+        loadingMessage: 'Synthesizing building block...',
+
+        // Theme
+        theme: localStorage.getItem('paprz_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
 
         // Gemini API Configuration
         apiKey: localStorage.getItem('paprz_gemini_api_key') || '',
@@ -25,11 +28,11 @@ export function ventureCanvasApp(initialBlocks = []) {
         isChallenging: false,
         challengeResult: null,
 
-        // Filters & Views
-        activeCategory: 'all',
+        // SVG Connectors
         connectors: [],
 
         init() {
+            this.applyTheme(this.theme);
             this.tempApiKey = this.apiKey;
             
             // Try loading from localStorage first, else use pre-seeded foundations
@@ -49,7 +52,7 @@ export function ventureCanvasApp(initialBlocks = []) {
                 this.blocks = initialBlocks;
             }
 
-            // Bind window resize for SVG connector paths
+            // Window resize for SVG connector paths
             window.addEventListener('resize', () => {
                 this.$nextTick(() => this.updateConnectors());
             });
@@ -63,32 +66,44 @@ export function ventureCanvasApp(initialBlocks = []) {
             });
         },
 
+        // Theme management
+        toggleTheme() {
+            this.theme = this.theme === 'dark' ? 'light' : 'dark';
+            this.applyTheme(this.theme);
+            localStorage.setItem('paprz_theme', this.theme);
+            this.$nextTick(() => this.updateConnectors());
+        },
+
+        applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+        },
+
         // API Key Management
         saveApiKey() {
             const cleanKey = this.tempApiKey.trim();
             this.apiKey = cleanKey;
             if (cleanKey) {
                 localStorage.setItem('paprz_gemini_api_key', cleanKey);
-                this.keyNotice = 'API key saved to browser memory!';
+                this.keyNotice = 'API key saved.';
             } else {
                 localStorage.removeItem('paprz_gemini_api_key');
-                this.keyNotice = 'API key removed. Running in heuristic mode.';
+                this.keyNotice = 'API key removed. Running in offline mode.';
             }
             setTimeout(() => {
                 this.showKeyModal = false;
                 this.keyNotice = '';
-            }, 1200);
+            }, 1000);
         },
 
         clearApiKey() {
             this.apiKey = '';
             this.tempApiKey = '';
             localStorage.removeItem('paprz_gemini_api_key');
-            this.keyNotice = 'Key removed from browser memory.';
+            this.keyNotice = 'API key removed.';
             setTimeout(() => {
                 this.showKeyModal = false;
                 this.keyNotice = '';
-            }, 1200);
+            }, 1000);
         },
 
         // Quick starter prompts
@@ -104,8 +119,8 @@ export function ventureCanvasApp(initialBlocks = []) {
 
             this.isLoading = true;
             this.loadingMessage = parentBlock
-                ? `Branching from validated premise: "${parentBlock.title}"...`
-                : 'Interrogating business model: synthesizing hypothesis & experiment...';
+                ? `Branching from "${parentBlock.title}"...`
+                : 'Synthesizing hypothesis, priors, and experiment...';
 
             let priors = [];
             let parentId = null;
@@ -113,7 +128,7 @@ export function ventureCanvasApp(initialBlocks = []) {
                 parentId = parentBlock.id;
                 priors = [
                     ...(parentBlock.things_we_know || []),
-                    `Established Truth: ${parentBlock.results.lesson}`
+                    `Established premise: ${parentBlock.results.lesson}`
                 ];
             }
 
@@ -169,7 +184,7 @@ export function ventureCanvasApp(initialBlocks = []) {
             this.forgeNewInquiry(parentBlock, pathOption.question);
         },
 
-        // Seal as Proven Foundation 🧱
+        // Seal as Proven Foundation
         sealBlock(block) {
             block.sealed = true;
             block.status = 'sealed';
@@ -179,7 +194,7 @@ export function ventureCanvasApp(initialBlocks = []) {
             this.$nextTick(() => this.updateConnectors());
         },
 
-        // Challenge an established block ⚡
+        // Challenge an established block
         openChallenge(block) {
             this.challengingBlock = block;
             this.challengeInput = '';
@@ -231,21 +246,21 @@ export function ventureCanvasApp(initialBlocks = []) {
         flagDescendants(parentId, verdict) {
             this.blocks.forEach(b => {
                 if (b.parent_id === parentId) {
-                    b.upstreamAlert = `Foundation questioned: Upstream truth "${this.challengingBlock?.title}" was assessed as ${verdict}.`;
+                    b.upstreamAlert = `Upstream premise "${this.challengingBlock?.title}" was assessed as ${verdict}.`;
                     this.flagDescendants(b.id, verdict);
                 }
             });
         },
 
         deleteBlock(blockId) {
-            if (!confirm('Remove this building block from the inquiry tree?')) return;
+            if (!confirm('Remove this building block?')) return;
             this.blocks = this.blocks.filter(b => b.id !== blockId);
             this.persistBlocks();
             this.$nextTick(() => this.updateConnectors());
         },
 
         resetToFoundations(initialBlocks) {
-            if (!confirm('Reset canvas back to the 6 initial Paperz foundational blocks?')) return;
+            if (!confirm('Reset canvas back to the 6 bedrock foundations?')) return;
             this.blocks = JSON.parse(JSON.stringify(initialBlocks));
             this.persistBlocks();
             this.$nextTick(() => this.updateConnectors());
@@ -282,10 +297,10 @@ export function ventureCanvasApp(initialBlocks = []) {
                     const x2 = cRect.left + cRect.width / 2 - containerRect.left;
                     const y2 = cRect.top - containerRect.top;
 
-                    const dy = Math.max(30, (y2 - y1) * 0.45);
+                    const dy = Math.max(32, (y2 - y1) * 0.45);
                     const pathData = `M ${x1} ${y1} C ${x1} ${y1 + dy}, ${x2} ${y2 - dy}, ${x2} ${y2}`;
 
-                    const isChallenged = child.upstreamAlert || parentEl.classList.contains('border-red-500');
+                    const isChallenged = child.upstreamAlert || child.challenged;
 
                     newConnectors.push({
                         id: `${child.parent_id}->${child.id}`,
