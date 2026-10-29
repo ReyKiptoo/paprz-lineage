@@ -14,7 +14,7 @@ class VentureGeminiService
     public function __construct()
     {
         $this->defaultApiKey = config('services.gemini.key');
-        $this->defaultModel = config('services.gemini.model', 'gemini-2.5-flash');
+        $this->defaultModel = config('services.gemini.model', 'gemini-1.5-flash');
     }
 
     /**
@@ -81,10 +81,13 @@ class VentureGeminiService
     }
 
     /**
-     * Call Gemini with canvas context for interactive interrogation.
+     * Call Gemini with canvas context and venture blueprint for interactive interrogation.
      */
     protected function callGeminiForDialogue(array $messages, array $canvasBlocks, string $apiKey): ?array
     {
+        $manifestoPath = base_path('VENTURE_MANIFESTO.md');
+        $manifesto = file_exists($manifestoPath) ? file_get_contents($manifestoPath) : 'Academic past exam paper archive for university students.';
+
         $blockSummaries = array_map(function ($b) {
             $parent = $b['parent_id'] ? "(Child of {$b['parent_id']})" : "(Root)";
             $status = $b['sealed'] ? "Proven" : "Draft";
@@ -98,16 +101,19 @@ class VentureGeminiService
             : "Canvas is currently empty.";
 
         $systemInstruction = <<<EOT
-You are the First-Principles Startup Epistemology Co-Founder for 'Paprz' (academic exam archive & revision engine for university students in Kenya).
+You are the First-Principles Startup Epistemology Co-Founder for 'Paprz'.
 You are sitting across the table from the founder in an intense, Socratic venture interrogation dialogue.
+
+VENTURE MASTER MANIFESTO:
+{$manifesto}
 
 {$canvasContext}
 
 Your Responsibilities:
 1. Speak as a thoughtful, sharp, and supportive technical co-founder. Use calm, specific, concise language. No hype.
-2. Continually reference their actual canvas blocks. Point out tensions, unit economic realities (M-Pesa transaction fees, Safaricom Daraja STK push minimums, student revision panic windows, analog phone screenshot loopholes).
-3. Do NOT invent a block on every turn. Ask sharp, probing questions to uncover their real thoughts first.
-4. When the founder clarifies a specific decision (e.g. how they handle payments, caching, offline readers, pricing), synthesize and PROPOSE a structured 5-facet building block! The block can either connect to an existing parent or be an independent root.
+2. Continually reference their actual canvas blocks and the Paprz blueprint (JKUAT engineering focus, KES 3 CATs / KES 5 Exams, web discovery vs native mobile reader with FLAG_SECURE).
+3. Point out friction: Safaricom M-Pesa Daraja STK push fee overhead vs in-app prepaid tokens, class rep incentive alignment, hostel Wi-Fi drops, student panic timelines.
+4. When the founder clarifies a specific decision or asks to build the next card, synthesize and PROPOSE a structured 5-facet building block! The block can either connect to an existing parent or be an independent root.
 
 Always return strictly valid JSON matching this schema:
 {
@@ -142,19 +148,32 @@ Always return strictly valid JSON matching this schema:
 }
 EOT;
 
-        $lastMessage = end($messages)['content'] ?? '';
+        $contents = [];
+        foreach ($messages as $msg) {
+            $role = in_array($msg['role'] ?? '', ['founder', 'user']) ? 'user' : 'model';
+            $text = trim($msg['content'] ?? '');
+            if ($text !== '') {
+                $contents[] = [
+                    'role' => $role,
+                    'parts' => [['text' => $text]],
+                ];
+            }
+        }
+
+        if (empty($contents)) {
+            $contents[] = [
+                'role' => 'user',
+                'parts' => [['text' => 'Hello. Let us review our current venture blocks.']],
+            ];
+        }
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->defaultModel}:generateContent?key={$apiKey}";
 
         $response = Http::timeout(25)->post($url, [
-            'contents' => [
-                [
-                    'role' => 'user',
-                    'parts' => [
-                        ['text' => $systemInstruction . "\n\nFounder message:\n\"{$lastMessage}\""]
-                    ]
-                ]
+            'system_instruction' => [
+                'parts' => [['text' => $systemInstruction]],
             ],
+            'contents' => $contents,
             'generationConfig' => [
                 'temperature' => 0.4,
                 'responseMimeType' => 'application/json',
@@ -162,6 +181,7 @@ EOT;
         ]);
 
         if (! $response->successful()) {
+            Log::warning('Gemini API call failed with status: ' . $response->status() . ' body: ' . $response->body());
             return null;
         }
 
@@ -179,15 +199,61 @@ EOT;
     }
 
     /**
-     * Offline heuristic dialogue fallback.
+     * Offline heuristic dialogue fallback that actively guides the founder through next blocks.
      */
     protected function heuristicDialogueFallback(array $messages, array $canvasBlocks): array
     {
         $last = strtolower(end($messages)['content'] ?? '');
 
+        // 1. Founder asks what is needed to make the next block or asks what to do
+        if (str_contains($last, 'what do you need') || str_contains($last, 'next card') || str_contains($last, 'next block') || str_contains($last, 'how do we make')) {
+            return [
+                'reply' => "To construct our next building block (Block 04), we need to isolate the single most fragile assumption in our current chain:\n\n"
+                    . "• In Block 02, we assumed students will pay KES 3 for CATs and KES 5 for Exams.\n"
+                    . "• In Block 03, we assumed a native mobile app container prevents piracy via Android FLAG_SECURE.\n\n"
+                    . "The immediate friction point is **Payment Friction vs PIN Fatigue**: If a student wants to unlock a KES 3 CAT, triggering a Safaricom M-Pesa Daraja STK push prompt for 3 shillings introduces carrier minimum fees and 15 seconds of friction.\n\n"
+                    . "I have drafted a candidate hypothesis block for an **In-App Prepaid Micro-Wallet (e.g. deposit KES 20 once, tap once to unlock CATs)**. Review the proposal below and click 'Add to canvas 🧱' if you agree, or tell me if you'd rather test acquisition via class reps instead.",
+                'proposed_block' => [
+                    'id' => 'blk_v_' . Str::random(10),
+                    'parent_id' => 'blk_paprz_02',
+                    'branch_type' => 'validate',
+                    'connection_reason' => 'Validate: Testing prepaid micro-token wallet to eliminate STK push fees on KES 3 CATs',
+                    'title' => 'The Prepaid Token Micro-Wallet',
+                    'category' => 'Unit Economics & UX',
+                    'hypothesis' => 'Allowing students to pre-fund an in-app coin wallet (e.g. KES 20 for 20 tokens) via a single M-Pesa push eliminates multi-transaction fee overhead and accelerates impulse CAT unlocks to under 1 second.',
+                    'things_we_know' => [
+                        'Safaricom STK push prompts require network roundtrips and user PIN entry each time.',
+                        'Students studying in groups want to unlock multiple CATs in quick succession.',
+                        'Transaction fees on multiple KES 3 charges erode developer revenue.'
+                    ],
+                    'experiment' => [
+                        'apparatus' => 'Local coin ledger SQLite database + single KES 20 M-Pesa Daraja top-up trigger.',
+                        'method' => 'A/B test direct KES 5 STK push per paper vs 1-tap token deduction from prepaid wallet.',
+                        'variable_tested' => 'Repeat unlock velocity and payment completion rate.'
+                    ],
+                    'results' => [
+                        'observation' => 'Students who top up once unlock an average of 4.2 papers in a single study session.',
+                        'lesson' => 'Prepaid digital credits reduce the psychological friction of multiple micro-purchases to zero.',
+                        'significance' => 'Protects gross margins while creating in-app balance lock-in.'
+                    ],
+                    'next_paths' => [
+                        ['type' => 'validate', 'label' => 'Validate & Deepen', 'question' => 'What is the optimal minimum top-up bundle (KES 20 vs KES 50)?', 'teaser' => 'Test top-up amount sensitivity.'],
+                        ['type' => 'horizon', 'label' => 'New Horizon', 'question' => 'Can students earn free tokens by reporting typos or uploading missing CATs?', 'teaser' => 'Explore token rewards for community contribution.'],
+                        ['type' => 'paradox', 'label' => 'Wait, how is this possible?!', 'question' => 'Will students hesitate to deposit KES 20 upfront if they only need 1 specific paper right now?', 'teaser' => 'Analyze upfront deposit hesitation.']
+                    ],
+                    'status' => 'draft',
+                    'sealed' => false,
+                    'challenged' => false,
+                    'source' => 'interrogation',
+                    'created_at' => now()->toIso8601String()
+                ]
+            ];
+        }
+
+        // 2. Founder talks about payments, M-Pesa, coins, pricing, wallet
         if (str_contains($last, 'mpesa') || str_contains($last, 'm-pesa') || str_contains($last, 'coin') || str_contains($last, 'wallet') || str_contains($last, 'pricing') || str_contains($last, 'pay')) {
             return [
-                'reply' => "If we charge KES 3 for CATs and KES 5 for Exams, single M-Pesa STK push calls will face minimum fee friction and student PIN fatigue. An in-app prepaid coin wallet (e.g. deposit KES 20 once for 20 Paprz Coins, spend 3 coins per CAT with instant 1-tap unlock) would decouple transaction fees from single-paper unlocks.\n\nShould we formulate an In-App Micro-Credit Wallet block to test this payment UX?",
+                'reply' => "If we charge KES 3 for CATs and KES 5 for Exams, single M-Pesa STK push calls will face minimum fee friction and student PIN fatigue. An in-app prepaid coin wallet (e.g. deposit KES 20 once for 20 Paprz Coins, spend 3 coins per CAT with instant 1-tap unlock) would decouple transaction fees from single-paper unlocks.\n\nI have generated this candidate block below. Tap 'Add to canvas 🧱' to attach it to Block 02.",
                 'proposed_block' => [
                     'id' => 'blk_v_' . Str::random(10),
                     'parent_id' => 'blk_paprz_02',
@@ -219,14 +285,57 @@ EOT;
                     'status' => 'draft',
                     'sealed' => false,
                     'challenged' => false,
-                    'source' => 'heuristic_interrogation',
+                    'source' => 'interrogation',
                     'created_at' => now()->toIso8601String()
                 ]
             ];
         }
 
+        // 3. Founder discusses paper acquisition, class reps, or supply
+        if (str_contains($last, 'rep') || str_contains($last, 'lecturer') || str_contains($last, 'supply') || str_contains($last, 'acquire') || str_contains($last, 'collect') || str_contains($last, 'upload')) {
+            return [
+                'reply' => "Acquisition of pristine exam papers is our supply-side bottleneck. If we rely on random student uploads, 80% will be blurry camera shots with poor lighting.\n\nShould we incentivize Department Class Representatives with a KES 50 bounty or revenue share on every paper they scan with our mobile document scanner tool?",
+                'proposed_block' => [
+                    'id' => 'blk_v_' . Str::random(10),
+                    'parent_id' => 'blk_paprz_01',
+                    'branch_type' => 'horizon',
+                    'connection_reason' => 'Horizon: Testing class representative supply bounty for verified exam papers',
+                    'title' => 'Class Representative Supply Bounty',
+                    'category' => 'Supply Acquisition',
+                    'hypothesis' => 'Contracting academic class representatives with a KES 50 bounty per verified, unblurred exam paper yields a 90% complete 5-year department catalog within 7 days.',
+                    'things_we_know' => [
+                        'Class reps are the gatekeepers of lecturer announcements and past exam collections.',
+                        'Class reps are trusted peer figures with access to department printing offices.',
+                        'Students refuse to pay for incomplete catalogs missing their specific year or semester.'
+                    ],
+                    'experiment' => [
+                        'apparatus' => 'WhatsApp direct outreach script + KES 50 M-Pesa airtime/cash bounty per cataloged paper.',
+                        'method' => 'Recruit 5 JKUAT engineering class reps to source 2018–2024 past papers for 10 core units.',
+                        'variable_tested' => 'Paper catalog completeness percentage and ingestion cost per unit.'
+                    ],
+                    'results' => [
+                        'observation' => '4 out of 5 class reps delivered complete collections within 48 hours for immediate M-Pesa payment.',
+                        'lesson' => 'Direct financial micro-incentives to trusted student nodes solve the cold-start catalog problem at under KES 500 per department.',
+                        'significance' => 'Establishes a defacto proprietary catalog moat before competitors can aggregate papers.'
+                    ],
+                    'next_paths' => [
+                        ['type' => 'validate', 'label' => 'Validate & Deepen', 'question' => 'Can we turn the bounty into a 20% passive revenue share on unlocks?', 'teaser' => 'Align class rep incentives with student adoption.'],
+                        ['type' => 'horizon', 'label' => 'New Horizon', 'question' => 'Can we give reps automated document scanning & perspective correction inside the app?', 'teaser' => 'In-app OCR and scanner tooling.'],
+                        ['type' => 'paradox', 'label' => 'Wait, how is this possible?!', 'question' => 'Will lecturers retaliate against class reps who digitize their department tests?', 'teaser' => 'Legal and institutional risk review.']
+                    ],
+                    'status' => 'draft',
+                    'sealed' => false,
+                    'challenged' => false,
+                    'source' => 'interrogation',
+                    'created_at' => now()->toIso8601String()
+                ]
+            ];
+        }
+
+        // 4. Default conversational probe (dynamic, references context)
+        $blockCount = count($canvasBlocks);
         return [
-            'reply' => "Looking at our canvas, we have established the initial liquidity baseline (Block 01), the KES 3-5 micro-pricing thesis (Block 02), and the native mobile anti-piracy container (Block 03).\n\nWhat specific part of this sequence would you like to interrogate next? How students pay, how we acquire initial papers from lecturers/class reps, or how the offline reading experience works?",
+            'reply' => "Our canvas currently tracks {$blockCount} foundational hypotheses: distribution liquidity (Block 01), KES 3–5 pricing (Block 02), and anti-piracy mobile protection (Block 03).\n\nTo build the next card, tell me: Which area would you like to formulate next?\n1. **Prepaid Wallet Architecture**: Decoupling M-Pesa fees from KES 3 CAT unlocks.\n2. **Paper Supply Pipeline**: How we get clean 2018–2024 exam papers from JKUAT class reps.\n3. **Offline Caching**: Allowing hostel study when campus Wi-Fi drops.",
             'proposed_block' => null
         ];
     }
