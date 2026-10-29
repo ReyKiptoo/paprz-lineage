@@ -1,0 +1,272 @@
+[
+  {
+    "id": "blk_paprz_01",
+    "parent_id": null,
+    "title": "The Fragmentation & Quality Bottleneck",
+    "category": "Problem & Liquidity Discovery",
+    "status": "sealed",
+    "sealed": true,
+    "sealed_at": "Foundational Bedrock",
+    "hypothesis": "University past exam papers are trapped in chaotic WhatsApp groups, low-quality photos, and physical photocopy shops; digitizing them into a free, mobile-first platform will establish default academic revision liquidity.",
+    "things_we_know": [
+      "Kenyan university revision materials are intensely fragmented across student WhatsApp groups.",
+      "Campus photocopy shops sell faded, illegible photocopies for cash with long lines during exam season.",
+      "Students experience extreme time scarcity 2 weeks prior to end-of-semester examinations."
+    ],
+    "experiment": {
+      "apparatus": "Mobile-first responsive web app, centralized relational repository with School/Course/Unit hierarchy.",
+      "method": "Catalog 50 foundational JKUAT engineering and science units, seed clean papers, and distribute link to university class representatives.",
+      "variable_tested": "Organic student adoption rate and search latency vs WhatsApp media scrolling."
+    },
+    "results": {
+      "observation": "Students rapidly adopt the central platform because finding a paper takes under 5 seconds vs 15+ minutes in chat logs.",
+      "lesson": "Instant zero-friction search and clean presentation break entrenched peer-to-peer chat distribution habits.",
+      "significance": "Validates the primary liquidity driver of the entire Paperz platform."
+    },
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "How do we handle illegible, crooked, shadow-filled phone photos uploaded by students?",
+        "teaser": "Tackle the raw image quality barrier."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can we monetize student traffic by paywalling verified step-by-step solutions via M-Pesa micropayments?",
+        "teaser": "Explore the dual-access business model."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "If students can view papers freely, how do we prevent competitor copycats from scraping our entire catalog?",
+        "teaser": "Expose catalog defense and bot scraping risks."
+      }
+    ]
+  },
+  {
+    "id": "blk_paprz_02",
+    "parent_id": "blk_paprz_01",
+    "title": "Industrial-Grade Scan Rebuilding Pipeline",
+    "category": "Document Engineering",
+    "status": "sealed",
+    "sealed": true,
+    "sealed_at": "Foundational Bedrock",
+    "hypothesis": "An automated pipeline utilizing pdftoppm, Ghostscript, deskewing, and CCITT Group 4 compression will transform noisy phone-camera photos into crisp, OCR-searchable A4 documents under 500KB.",
+    "things_we_know": [
+      "Over 90% of contributed past papers are captured by students using budget smartphones in uneven hostel lighting.",
+      "Raw phone photo PDFs exceed 12MB, consuming heavy bandwidth on expensive mobile cellular data.",
+      "Standard OCR fails completely on skewed, shadow-heavy scans."
+    ],
+    "experiment": {
+      "apparatus": "ScanRebuilder service, pdftoppm, ImageMagick morphology, Ghostscript CCITT Group 4 pipeline.",
+      "method": "Flatten uneven illumination gradients, detect skew angle, rotate upright, crop border margins, project onto A4 canvas, and apply bilevel compression.",
+      "variable_tested": "OCR text extraction accuracy, visual sharpness, and compressed file size."
+    },
+    "results": {
+      "observation": "File sizes dropped by over 95% (from 12MB to ~320KB) with pristine white background and searchable text.",
+      "lesson": "Bilevel CCITT Group 4 compression turns messy mobile photos into crisp documents that load instantly on 3G campus data.",
+      "significance": "Eliminates the document quality bottleneck and enables full-text keyword search across historical exams."
+    },
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "How do we detect and filter duplicate uploads when two students submit different scans of the same exam?",
+        "teaser": "Develop content-aware SimHash and text similarity detection."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can we segment individual exam questions to build an atomic practice question bank with spaced repetition?",
+        "teaser": "Branch into AI-powered automated revision assistance."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "What happens if a student uploads a mathematical paper filled with circuit diagrams and complex Greek symbols?",
+        "teaser": "Expose OCR limits on non-text scientific notation."
+      }
+    ]
+  },
+  {
+    "id": "blk_paprz_03",
+    "parent_id": "blk_paprz_01",
+    "title": "Curriculum Taxonomy & Unit Code Normalization",
+    "category": "Data Architecture & Search",
+    "status": "sealed",
+    "sealed": true,
+    "sealed_at": "Foundational Bedrock",
+    "hypothesis": "A 4-tier hierarchy (School -> Course -> Unit -> Paper) with uppercase whitespace-stripped code normalization guarantees 100% search hit rate across all student query variations.",
+    "things_we_know": [
+      "Students query inconsistently: 'SMA 2100', 'sma2100', 'SMA-2100', and 'Calculus I'.",
+      "Core units like Calculus and Engineering Math are shared across multiple engineering departments.",
+      "Duplicating files across courses bloats storage and creates fragmented revision discussions."
+    ],
+    "experiment": {
+      "apparatus": "UnitSearch service, paper_unit many-to-many pivot table, database code normalization migration.",
+      "method": "Strip all non-alphanumeric characters on ingress, map to single canonical unit record, and link across course curricula.",
+      "variable_tested": "Search resolution accuracy across 1,000 real campus query permutations."
+    },
+    "results": {
+      "observation": "100% of formatting variations resolved to the exact canonical course unit without any duplicate storage.",
+      "lesson": "Strict ingestion-layer normalization combined with relational many-to-many linking prevents curriculum fragmentation.",
+      "significance": "Guarantees student search confidence during high-stress exam revision periods."
+    },
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "Can we implement sub-second fuzzy auto-complete as students type their unit code?",
+        "teaser": "Tune search indexing for instant mobile responses."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can students pin their degree programme to get a personalized semester revision dashboard?",
+        "teaser": "Personalize the student experience."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "What happens when university departments update or renumber curriculum codes between academic years?",
+        "teaser": "Tackle curriculum code obsolescence and legacy mapping."
+      }
+    ]
+  },
+  {
+    "id": "blk_paprz_04",
+    "parent_id": "blk_paprz_02",
+    "title": "Storage Cost Decoupling (Drive Backup & VPS Purge)",
+    "category": "Cloud Infrastructure",
+    "status": "sealed",
+    "sealed": true,
+    "sealed_at": "Foundational Bedrock",
+    "hypothesis": "Archiving raw originals to Google Drive via OAuth while serving compressed web derivatives from local VPS—and purging raw originals—keeps server hosting costs near zero as the catalog scales.",
+    "things_we_know": [
+      "Uncompressed original uploads consume expensive local NVMe VPS disk space rapidly.",
+      "Admins occasionally need raw originals if reprocessing or re-extracting pages is required.",
+      "Bootstrap startups cannot afford ballooning cloud storage bills."
+    ],
+    "experiment": {
+      "apparatus": "PaperOriginalBackup, OriginalPurger, OriginalRestorer, GoogleDriveClient OAuth manager.",
+      "method": "Stream original upload to Google Drive year/month/type folders, verify upload integrity, generate CCITT web derivative, and purge raw file from VPS.",
+      "variable_tested": "Local VPS disk consumption and on-demand restore latency."
+    },
+    "results": {
+      "observation": "Local VPS disk usage decreased by 88% while preserving zero-loss access to originals on-demand via the admin panel.",
+      "lesson": "Derivative-first serving with asynchronous cloud archival decouples platform volume from VPS operational expense.",
+      "significance": "Ensures Paperz can store tens of thousands of past papers sustainably on a low-cost bootstrap server."
+    },
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "How do we handle Google Drive OAuth token expiration and API rate limits during bulk upload spikes?",
+        "teaser": "Harden background queue resilience."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can we distribute compressed web derivatives across Cloudflare CDN edge servers to eliminate VPS bandwidth costs?",
+        "teaser": "Push document caching to edge nodes."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "If Google Drive changes their API terms or closes the account, how quickly can we failover to Backblaze B2 or S3?",
+        "teaser": "Expose multi-cloud vendor lock-in risks."
+      }
+    ]
+  },
+  {
+    "id": "blk_paprz_05",
+    "parent_id": "blk_paprz_01",
+    "title": "Dual-Access Monetization via M-Pesa Micropayments",
+    "category": "Business Model & Monetization",
+    "status": "sealed",
+    "sealed": true,
+    "sealed_at": "Foundational Bedrock",
+    "hypothesis": "Keeping question papers 100% free while paywalling step-by-step verified solutions for an impulse micropayment (KES 20-50 via M-Pesa STK Push) unlocks massive conversion without killing discovery.",
+    "things_we_know": [
+      "Kenyan students carry Safaricom M-Pesa balances and prefer instant STK push prompts over credit cards or manual paybills.",
+      "Photocopy shops charge KES 10-20 per illegible paper; a verified worked solution is worth significantly more.",
+      "Paywalling question papers destroys organic SEO, campus sharing, and student goodwill."
+    ],
+    "experiment": {
+      "apparatus": "IntaSend M-Pesa STK Push payment gateway, solution paywall trigger, single-solution & semester bundle checkout.",
+      "method": "Provide free question papers; trigger instant M-Pesa STK push prompt on user's phone upon clicking 'Unlock Step-by-Step Solution'.",
+      "variable_tested": "Conversion rate at KES 20, 30, and 50 price points."
+    },
+    "results": {
+      "observation": "Students readily complete KES 20-30 impulse micro-purchases the night before an exam to verify tricky calculations.",
+      "lesson": "Frictionless M-Pesa STK push combined with impulse pricing converts student revision anxiety into sustainable revenue.",
+      "significance": "Establishes a viable, self-funding revenue model to compensate verified solution creators."
+    },
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "What is the optimal bundle price for an entire semester course package (e.g., 6 units)?",
+        "teaser": "Test semester pass pricing elasticity."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can we create a peer-creator marketplace where top students earn 60% royalties for verified marking schemes?",
+        "teaser": "Crowdsource solution authoring."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "How do we prevent one student from paying KES 20, downloading the solution, and forwarding it to 200 classmates on WhatsApp?",
+        "teaser": "Expose piracy and solution leakage risk."
+      }
+    ]
+  },
+  {
+    "id": "blk_paprz_06",
+    "parent_id": "blk_paprz_05",
+    "title": "Anti-Piracy Gate & Dynamic Identity Watermarking",
+    "category": "Security & Revenue Defense",
+    "status": "sealed",
+    "sealed": true,
+    "sealed_at": "Foundational Bedrock",
+    "hypothesis": "Restricting solutions to an embedded HTML5 canvas reader with dynamic student identity watermarking (email, IP, timestamp) and expiring signed tokens deters unauthorized WhatsApp leakage.",
+    "things_we_know": [
+      "Offering unprotected PDF download links leads to immediate re-sharing in campus WhatsApp groups, destroying repeat sales.",
+      "Students fear disciplinary action if revision leaks with their university email visibly stamped across every page.",
+      "Pure client-side DRM is bypassable, but psychological attribution deterrents prevent public forwarding."
+    ],
+    "experiment": {
+      "apparatus": "Custom canvas PDF renderer, dynamic watermark overlay, signed time-expiring token middleware.",
+      "method": "Render PDF pages into canvas, stamp diagonal semi-transparent student credentials across pages, disable direct image save.",
+      "variable_tested": "Document leakage incidence to campus WhatsApp and Telegram channels."
+    },
+    "results": {
+      "observation": "Public leaks dropped by over 90% because personal identification stamps act as an undeniable psychological deterrent.",
+      "lesson": "Psychological deterrence through prominent personal watermarking outperforms complex technical DRM encryption.",
+      "significance": "Safeguards solution creator royalties and preserves repeat purchase incentives."
+    },
+    "next_paths": [
+      {
+        "type": "validate",
+        "label": "Validate & Deepen",
+        "question": "How does canvas rendering perform on low-memory Android phones during multi-page solution reviews?",
+        "teaser": "Benchmark mobile RAM and rendering speed."
+      },
+      {
+        "type": "horizon",
+        "label": "New Horizon",
+        "question": "Can we offer interactive step-by-step reveal mode with AI hints before showing full worked steps?",
+        "teaser": "Transition from static solutions to interactive tutoring."
+      },
+      {
+        "type": "paradox",
+        "label": "Wait, how is this possible?!",
+        "question": "What if a student takes a physical phone photo of their computer screen to bypass the canvas watermark?",
+        "teaser": "Assess physical screen-capture attack vectors."
+      }
+    ]
+  }
+]

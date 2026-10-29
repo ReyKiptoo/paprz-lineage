@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-[#0b0d13] text-slate-100 antialiased selection:bg-amber-500/30 selection:text-amber-200;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+}
+
+/* Glass and subtle surfaces */
+.glass-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
